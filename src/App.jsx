@@ -1,35 +1,102 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import Header from "./components/Header";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import Home from "./components/Home";
+import Shop from "./components/Shop";
+import Cart from "./components/Cart";
+import Details from "./components/Details";
+import Footer from "./components/Footer";
+import { useState } from "react";
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  const [cart, setCart] = useState([]);
+
+  const addToCart = (current) => {
+    if (cart.some((item) => current.id === item.id)) {
+      setCart(
+        cart.map((item) =>
+          item.id === current.id
+            ? { ...item, qty: item.qty + current.qty }
+            : item
+        )
+      );
+      return;
+    }
+
+    setCart(cart.concat(current));
+  };
+
+  const buyNow = (current) => {
+    if (cart.some((item) => current.id === item.id)) return;
+    setCart(cart.concat(current));
+  };
+
+  const increaseQty = (current) => {
+    setCart(
+      cart.map((item) =>
+        item.id === current.id ? { ...item, qty: item.qty + 1 } : item
+      )
+    );
+  };
+
+  const decreaseQty = (current) => {
+    if (current.qty === 1) return;
+    setCart(
+      cart.map((item) =>
+        item.id === current.id ? { ...item, qty: item.qty - 1 } : item
+      )
+    );
+  };
+
+  const changeHandler = (current) => (e) => {
+    setCart(
+      cart.map((item) =>
+        item.id === current.id ? { ...item, qty: e.target.value } : item
+      )
+    );
+  };
+
+  const setDefault = (current) => (e) => {
+    if (e.target.value === "" || e.target.value === "0")
+      setCart(
+        cart.map((item) => (item === current ? { ...item, qty: 1 } : item))
+      );
+  };
+
+  const deleteItem = (current) => {
+    setCart(cart.filter((item) => item.id !== current.id));
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <Router basename="/">
+      <div className="App">
+        <Header cart={cart} />
+        <div className="container">
+          <Switch>
+            <Route exact path="/">
+              <Home />
+            </Route>
+            <Route exact path="/shop">
+              <Shop />
+            </Route>
+            <Route path="/cart">
+              <Cart
+                cart={cart}
+                increaseQty={increaseQty}
+                decreaseQty={decreaseQty}
+                changeHandler={changeHandler}
+                setDefault={setDefault}
+                deleteItem={deleteItem}
+              />
+            </Route>
+            <Route path="/shop/:id">
+              <Details addToCart={addToCart} buyNow={buyNow} />
+            </Route>
+          </Switch>
+        </div>
+        <Footer />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    </Router>
+  );
+};
 
-export default App
+export default App;
